@@ -48,6 +48,12 @@ def all():
         print("|", linha, "|")
         print("-*-" * 14)
 
+conn = sqlite3.connect("ProjetoDB.db")
+cursor = conn.cursor()
+cursor.execute('CREATE TABLE if not exists "caminhoes" ("fz"	integer NOT NULL, "modelo" varchar(30), "variante" integer, "pais" varchar(30), "id" integer);')
+cursor.execute('CREATE TABLE if not exists "login"("usuario" varchar(20) NOT NULL, "senha" varchar(20) NOT NULL, "id" INTEGER NOT NULL, PRIMARY KEY("id"));')
+conn.close()
+
 crud = 'S'
 while crud == 'S':
     continual = 'S'
@@ -80,12 +86,15 @@ while crud == 'S':
             header("CADASTRO", 4)
             nvuser = input("\nLogin: ")
             nvsenha = input("Senha: ")
-            cursor.execute("select count(*), usuario, id from login where usuario = '{}'".format(nvuser))
+            cursor.execute("select count(*) from login where usuario = '{}'".format(nvuser))
             lg = cursor.fetchone()
             if lg[0] == 0:
                 cursor.execute("select max(id) from login")
                 idfetch = cursor.fetchone()
-                cursor.execute("insert into login values ('{}', '{}', {})".format(nvuser, nvsenha, idfetch[0] + 1))
+                if idfetch[0] is None:
+                    cursor.execute("insert into login values ('{}', '{}', 0)".format(nvuser, nvsenha))
+                else:
+                    cursor.execute("insert into login values ('{}', '{}', {})".format(nvuser, nvsenha, idfetch[0] + 1))
                 conn.commit()
                 print("Usuário cadasrado!")            
             else:
@@ -95,10 +104,6 @@ while crud == 'S':
         elif entrada == '0':
             exit()
         conn.close()
-
-
-
-
 
     continua1 = 'S'
     while continua1 == 'S':
@@ -180,14 +185,15 @@ while crud == 'S':
                     print("opção invalida\n")
                 else:
                     if busca == '1':
-                        fz = numero(6, "Qual FZ deseja procurar no DB?:", 3)
+                        fz = numero(6, "\nQual FZ deseja procurar no DB?:", 3)
                         cursor.execute("select count(*) from caminhoes where fz = {} and id = {}".format(fz, id))
                         rs = cursor.fetchone()
                         if rs[0] > 0:
-                            cursor.execute(
-                                "select count(*), modelo, variante, pais from caminhoes where fz ={} and id = {}".format(fz, id))
+                            os.system("cls")
+                            header("BUSCA DE VEÍCULOS", 7)
+                            cursor.execute("select fz, modelo, variante, pais from caminhoes where fz ={} and id = {}".format(fz, id))
                             rs = cursor.fetchone()
-                            print("Modelo = {} \nVariante = {} \nPaís = {}".format(rs[1], rs[2], rs[3]))
+                            print("\nFZ = {}\nModelo = {} \nVariante = {} \nPaís = {}".format(rs[0], rs[1], rs[2], rs[3]))
                             continua = filtro_SN("Deseja realizar outra busca? [S/N]: ")
                         else:
                             continua = filtro_SN("FZ inexistente, deseja realizar outra busca? [S/N]: ")
